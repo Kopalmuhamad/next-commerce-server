@@ -40,7 +40,12 @@ app.listen(port, () => {
 
 //? Connect to mongodb
 try {
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGO_URI, {
+    maxPoolSize: 10, // Batasi jumlah koneksi
+    serverSelectionTimeoutMS: 5000, // Batasi waktu koneksi
+    socketTimeoutMS: 45000, // Timeout untuk socket koneksi
+    keepAlive: true, // Pastikan koneksi tetap hidup
+  });
   console.log("MongoDB connected successfully.");
 } catch (error) {
   console.error("MongoDB connection failed:", error);
