@@ -24,7 +24,7 @@ const createResToken = async (user, statusCode, res) => {
 
   await User.findByIdAndUpdate(user._id, {
     refreshToken,
-  }).lean();
+  });
 
   const cookieOptionToken = {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 6 days
@@ -46,7 +46,7 @@ const createResToken = async (user, statusCode, res) => {
   user.password = undefined;
 
   // Send response
-  return res.status(statusCode).json({
+  res.status(statusCode).json({
     success: true,
     accessToken,
     user,
@@ -66,7 +66,7 @@ export const register = asyncHandler(async (req, res) => {
   }
 
   // Check if the email is already registered
-  const userExists = await User.findOne({ email }).lean();
+  const userExists = await User.findOne({ email });
   if (userExists) {
     res.status(400);
     throw new Error("User with this email already exists.");
@@ -113,7 +113,7 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const generateOtpCode = asyncHandler(async (req, res) => {
-  const currentUser = await User.findById(req.user._id).lean();
+  const currentUser = await User.findById(req.user._id);
 
   const otpData = await currentUser.generateOtpCode();
 
@@ -157,7 +157,7 @@ export const verificationUser = asyncHandler(async (req, res) => {
   const otp_code = await OtpCode.findOne({
     otp: req.body.otp,
     user: req.user._id,
-  }).lean();
+  });
 
   if (!otp_code) {
     res.status(400);
@@ -165,12 +165,12 @@ export const verificationUser = asyncHandler(async (req, res) => {
   }
 
   // Update isVerified to true
-  const userData = await User.findById(req.user._id).lean();
+  const userData = await User.findById(req.user._id);
 
   await User.findByIdAndUpdate(userData._id, {
     isVerified: true,
     emailVerifiedAt: Date.now(),
-  }).lean();
+  });
 
   return res.status(200).json({
     success: true,
@@ -252,7 +252,7 @@ export const logout = asyncHandler(async (req, res) => {
 
   await User.findByIdAndUpdate(req.user._id, {
     refreshToken: null,
-  }).lean();
+  });
 
   res.cookie("refreshToken", null, {
     httpOnly: true,
