@@ -66,7 +66,7 @@ export const register = asyncHandler(async (req, res) => {
   }
 
   // Check if the email is already registered
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email }).lean();
   if (userExists) {
     res.status(400);
     throw new Error("User with this email already exists.");
