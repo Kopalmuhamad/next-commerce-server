@@ -16,6 +16,21 @@ dotenv.config();
 const app = express();
 const port = 8080;
 
+//? Connect to mongodb
+mongoose
+  .connect(process.env.MONGODB_URL)
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+//? Server Lister
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
+});
+
 //? Middleware
 app.use(express.json());
 app.use(helmet());
@@ -32,21 +47,3 @@ app.use("/api/auth", userRouter);
 //? Error Handler
 app.use(notFound);
 app.use(errorHandler);
-
-//? Server Lister
-app.listen(port, () => {
-  console.log(`Listening on port ${port}`);
-});
-
-//? Connect to mongodb
-try {
-  await mongoose.connect(process.env.MONGO_URI, {
-    maxPoolSize: 10, // Batasi jumlah koneksi
-    serverSelectionTimeoutMS: 5000, // Batasi waktu koneksi
-    socketTimeoutMS: 45000, // Timeout untuk socket koneksi
-    keepAlive: true, // Pastikan koneksi tetap hidup
-  });
-  console.log("MongoDB connected successfully.");
-} catch (error) {
-  console.error("MongoDB connection failed:", error);
-}
