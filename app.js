@@ -38,7 +38,13 @@ app.use(ExpressMongoSanitize());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static("public"));
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000", // Replace with your Next.js URL
+    credentials: true, // Allow cookies and other credentials to be sent
+    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed methods
+  })
+);
 
 //? Routes
 app.use("/api/auth", authRouter);
