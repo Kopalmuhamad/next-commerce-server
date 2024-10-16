@@ -27,21 +27,19 @@ const createResToken = async (user, statusCode, res) => {
   });
 
   const cookieOptionToken = {
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
-    httpOnly: true, // Cookie accessible only by web server
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", // Prevent CSRF attacks
-    path: "/",
-    maxAge: 24 * 60 * 60 * 1000, // Berlaku 1 jam
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Gunakan 'secure: true' di production (HTTPS)
+    sameSite: "none", // Mengizinkan cookies dikirim lintas domain
+    path: "/", // Berlaku untuk seluruh domain
+    expires: new Date(Date.now() + 60 * 60 * 1000), // Berlaku 1 jam
   };
 
   const cookiesOptionRefresh = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
-    httpOnly: true, // Cookie accessible only by web server
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", // Prevent CSRF attacks
+    sameSite: "none", // Mengizinkan cookies dikirim lintas domain
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // Berlaku 7 hari
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Berlaku 7 hari
   };
 
   // Set the JWT token as cookie
