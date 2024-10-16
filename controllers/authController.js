@@ -27,15 +27,19 @@ const createResToken = async (user, statusCode, res) => {
   });
 
   const cookieOptionToken = {
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 6 days
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
     httpOnly: true, // Cookie accessible only by web server
     secure: process.env.NODE_ENV === "production", // Set secure to true in production
+    sameSite: "strict", // Prevent CSRF attacks
+    path: "/",
   };
 
   const cookiesOptionRefresh = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
     httpOnly: true, // Cookie accessible only by web server
     secure: process.env.NODE_ENV === "production", // Set secure to true in production
+    sameSite: "strict", // Prevent CSRF attacks
+    path: "/",
   };
 
   // Set the JWT token as cookie
@@ -191,15 +195,32 @@ export const refreshToken = asyncHandler(async (req, res) => {
     throw new Error("Invalid Refresh Token.");
   }
 
-  jwt.verify(refreshToken, process.env.JWT_TOKEN_REFRESH, (err, decoded) => {
-    if (err) {
-      res.status(401);
-      throw new Error("Invalid Refresh Token.");
-    }
+  jwt.verify(
+    refreshToken,
+    process.env.JWT_TOKEN_REFRESH,
+    async (err, decoded) => {
+      if (err) {
+        res.status(401);
+        throw new Error("Invalid or expired Refresh Token.");
+      }
 
-    const newToken = generateRefreshToken(decoded.id);
-    createResToken(user, 200, res, newToken);
-  });
+      const newAccessToken = signToken(decoded.id); // Generate new access token
+
+      // Update the JWT in cookies
+      res.cookie("jwt", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 hour
+      });
+
+      res.status(200).json({
+        success: true,
+        accessToken: newAccessToken,
+      });
+    }
+  );
 });
 
 // Login user
@@ -245,18 +266,20 @@ export const getUser = asyncHandler(async (req, res) => {
 
 // Logout user
 export const logout = asyncHandler(async (req, res) => {
+  // Remove the jwt and refreshToken from cookies
   res.cookie("jwt", null, {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
 
-  await User.findByIdAndUpdate(req.user._id, {
-    refreshToken: null,
-  });
-
   res.cookie("refreshToken", null, {
     httpOnly: true,
     expires: new Date(Date.now()),
+  });
+
+  // Clear refresh token from the database
+  await User.findByIdAndUpdate(req.user._id, {
+    refreshToken: null,
   });
 
   res.status(200).json({
