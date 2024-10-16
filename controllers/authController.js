@@ -29,17 +29,19 @@ const createResToken = async (user, statusCode, res) => {
   const cookieOptionToken = {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
     httpOnly: true, // Cookie accessible only by web server
-    secure: false, // Set secure to true in production
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax", // Prevent CSRF attacks
     path: "/",
+    maxAge: 24 * 60 * 60 * 1000, // Berlaku 1 jam
   };
 
   const cookiesOptionRefresh = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
     httpOnly: true, // Cookie accessible only by web server
-    secure: false, // Set secure to true in production
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax", // Prevent CSRF attacks
     path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // Berlaku 7 hari
   };
 
   // Set the JWT token as cookie
@@ -209,10 +211,10 @@ export const refreshToken = asyncHandler(async (req, res) => {
       // Update the JWT in cookies
       res.cookie("jwt", newAccessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "strict",
-        lax: "/",
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 hour
+        secure: process.env.NODE_ENV === "production", // Set secure to true in production (for HTTPS)
+        sameSite: "lax", // Set to lax for cross-site cookie handling
+        path: "/", // Make sure it's available for the whole application
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day expiration
       });
 
       res.status(200).json({
